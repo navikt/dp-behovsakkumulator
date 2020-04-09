@@ -39,4 +39,4 @@ spec:
     - name: KAFKA_CONSUMER_GROUP_ID
       value: dp-behovsakkumulator-v1
     - name: KAFKA_RAPID_TOPIC
-      value: privat-dagpenger-behov-v1
+      value: privat-dagpenger-behov-v2
