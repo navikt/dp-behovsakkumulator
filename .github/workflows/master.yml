@@ -8,7 +8,7 @@ on:
       - master
 
 env:
-  IMAGE: docker.pkg.github.com/${{ github.repository }}/dp-behovsakkumulator${{ github.sha }}
+  IMAGE: docker.pkg.github.com/${{ github.repository }}/dp-behovsakkumulator:${{ github.sha }}
 
 jobs:
   build:
