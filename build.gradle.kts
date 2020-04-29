@@ -5,12 +5,10 @@ val ktorVersion = "1.3.1"
 
 plugins {
     kotlin("jvm") version "1.3.70"
+    id(Spotless.spotless) version Spotless.version
 }
 
-group = "no.nav.helse"
-
-val githubUser: String by project
-val githubPassword: String by project
+group = "no.nav.dagpenger"
 
 repositories {
     mavenCentral()
@@ -38,16 +36,12 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_12
-    targetCompatibility = JavaVersion.VERSION_12
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-tasks.named<KotlinCompile>("compileKotlin") {
-    kotlinOptions.jvmTarget = "12"
-}
-
-tasks.named<KotlinCompile>("compileTestKotlin") {
-    kotlinOptions.jvmTarget = "12"
+tasks.withType<KotlinCompile>().all {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }
 
 tasks.named<Jar>("jar") {
@@ -69,13 +63,35 @@ tasks.named<Jar>("jar") {
     }
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
+tasks.withType<Wrapper> {
+    gradleVersion = "6.0.1"
+}
+
+spotless {
+    kotlin {
+        ktlint()
+    }
+    kotlinGradle {
+        target("*.gradle.kts", "buildSrc/**/*.kt*")
+        ktlint()
     }
 }
 
-tasks.withType<Wrapper> {
-    gradleVersion = "6.0.1"
+tasks.named("spotlessCheck") {
+    dependsOn("compileKotlin")
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+    testLogging {
+        showExceptions = true
+        showStackTraces = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        events = setOf(
+            org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
+            org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
+            org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
+        )
+        showStandardStreams = true
+    }
 }

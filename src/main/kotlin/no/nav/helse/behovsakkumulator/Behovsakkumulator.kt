@@ -12,16 +12,14 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListener {
-
     private val log = LoggerFactory.getLogger(this::class.java)
     private val sikkerLog = LoggerFactory.getLogger("tjenestekall")
-
     private val behovUtenLøsning = mutableMapOf<String, Pair<RapidsConnection.MessageContext, JsonMessage>>()
 
     init {
         River(rapidsConnection).apply {
             validate { it.forbid("@final") }
-            validate { it.requireKey("@id", "@behov", "@løsning", "vedtaksperiodeId") }
+            validate { it.requireKey("@id", "@behov", "@løsning", "vedtakId") }
             validate { it.require("@opprettet", JsonNode::asLocalDateTime) }
         }.register(this)
     }
@@ -29,7 +27,6 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
         loggBehov(log, packet)
         loggBehov(sikkerLog, packet)
-
         val id = packet["@id"].asText()
         val resultat = behovUtenLøsning[id]?.also { it.second.kombinerLøsninger(packet) } ?: (context to packet)
 
@@ -42,7 +39,9 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
             behovUtenLøsning.remove(id)
         } else {
             behovUtenLøsning
-                .filterValues { (_, packet) -> packet["@opprettet"].asLocalDateTime().isBefore(LocalDateTime.now().minusMinutes(30)) }
+                .filterValues { (_, packet) ->
+                    packet["@opprettet"].asLocalDateTime().isBefore(LocalDateTime.now().minusMinutes(30))
+                }
                 .forEach { (key, _) -> behovUtenLøsning.remove(key) }
             behovUtenLøsning[id] = resultat
         }
@@ -67,7 +66,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         logger.info(
             "Markert behov med {} ({}) som final",
             keyValue("id", løsning["@id"].asText()),
-            keyValue("vedtaksperiodeId", løsning["vedtaksperiodeId"].asText())
+            keyValue("vedtakId", løsning["vedtakId"].asText())
         )
     }
 
@@ -76,7 +75,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
             "Satt sammen {} for behov med id {} ({}). Forventer {}",
             keyValue("løsninger", løsningPacket["@løsning"].fieldNames().asSequence().joinToString(", ")),
             keyValue("id", løsningPacket["@id"].asText()),
-            keyValue("vedtaksperiodeId", løsningPacket["vedtaksperiodeId"].asText()),
+            keyValue("vedtakId", løsningPacket["vedtakId"].asText()),
             keyValue("behov", løsningPacket["@behov"].joinToString(", ", transform = JsonNode::asText))
         )
     }
@@ -86,7 +85,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
             "Mottok {} for behov med {} ({})",
             keyValue("løsninger", packet["@løsning"].fieldNames().asSequence().joinToString(", ")),
             keyValue("id", packet["@id"].asText()),
-            keyValue("vedtaksperiodeId", packet["vedtaksperiodeId"].asText())
+            keyValue("vedtakId", packet["vedtakId"].asText())
         )
     }
 }
