@@ -1,4 +1,4 @@
-package no.nav.helse.behovsakkumulator
+package no.nav.dagpenger.behovsakkumulator
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -6,34 +6,23 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.kotest.core.spec.style.FunSpec
 import java.time.LocalDateTime
 import java.util.UUID
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertDoesNotThrow
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class BehovsakkumulatorTest {
-    private companion object {
-        private val objectMapper: ObjectMapper = jacksonObjectMapper()
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .registerModule(JavaTimeModule())
-    }
+internal class BehovsakkumulatorTest : FunSpec({
+    lateinit var rapid: TestRapid
 
-    private lateinit var rapid: TestRapid
-
-    @BeforeEach
-    fun setup() {
+    beforeTest {
         rapid = TestRapid()
         Behovsakkumulator(rapid)
     }
 
-    @Test
-    fun `frittstående svar blir markert final`() {
+    test("frittstående svar blir markert final") {
         val behov4 =
             objectMapper.readTree("""{"@id": "behovsid5", "@opprettet": "${LocalDateTime.now()}", "vedtakId": "id", "@behov": ["AndreYtelser"]}""")
         val løsning4 = behov4.medLøsning("""{ "AndreYtelser": { "felt1": null, "felt2": {}} }""")
@@ -50,8 +39,7 @@ internal class BehovsakkumulatorTest {
         assertEquals(1, løsningTyper.size)
     }
 
-    @Test
-    fun `fler delsvar blir kombinert til et komplett svar`() {
+    test("fler delsvar blir kombinert til et komplett svar") {
         val behov1 =
             objectMapper.readTree("""{"@id": "behovsid1", "@opprettet": "${LocalDateTime.now()}", "vedtakId": "id", "@behov": ["Sykepengehistorikk", "AndreYtelser", "Foreldrepenger"]}""")
         val løsning1 = behov1.medLøsning("""{ "Sykepengehistorikk": [] }""")
@@ -68,8 +56,7 @@ internal class BehovsakkumulatorTest {
         assertTrue(løsningTyper.containsAll(listOf("Foreldrepenger", "AndreYtelser", "Sykepengehistorikk")))
     }
 
-    @Test
-    fun `løser behov #3 uavhengig av om behov #2 er ferdigstilt`() {
+    test("løser behov #3 uavhengig av om behov #2 er ferdigstilt") {
         val behov2 =
             objectMapper.readTree("""{"@id": "behovsid2", "@opprettet": "${LocalDateTime.now()}", "vedtakId": "id", "@behov": ["Sykepengehistorikk", "AndreYtelser", "Foreldrepenger"]}""")
         val løsning1ForBehov2 = behov2.medLøsning("""{ "Sykepengehistorikk": [] }""")
@@ -95,8 +82,7 @@ internal class BehovsakkumulatorTest {
         assertEquals("behovsid3", record["@id"].asText())
     }
 
-    @Test
-    fun `overlever ugyldig json`() {
+    test("overlever ugyldig json") {
         val behovsid0 = UUID.randomUUID().toString()
         val behovsid1 = UUID.randomUUID().toString()
         val behov1 =
@@ -121,29 +107,34 @@ internal class BehovsakkumulatorTest {
 
         assertEquals(1, rapid.sentMessages.size)
     }
+})
 
-    private fun JsonNode.medLøsning(løsning: String) =
-        (this.deepCopy() as ObjectNode).set<ObjectNode>("@løsning", objectMapper.readTree(løsning)).toString()
+private val objectMapper: ObjectMapper = jacksonObjectMapper()
+    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    .registerModule(JavaTimeModule())
 
-    private class TestRapid : RapidsConnection() {
-        val sentMessages = mutableListOf<Pair<String, JsonNode>>()
-        fun sendTestMessage(key: String, message: String) {
-            val context = TestContext(key)
-            listeners.forEach { it.onMessage(message, context) }
+private class TestRapid : RapidsConnection() {
+    val sentMessages = mutableListOf<Pair<String, JsonNode>>()
+    fun sendTestMessage(key: String, message: String) {
+        val context = TestContext(key)
+        listeners.forEach { it.onMessage(message, context) }
+    }
+
+    override fun publish(message: String) {}
+    override fun publish(key: String, message: String) {}
+    override fun start() {}
+    override fun stop() {}
+    private inner class TestContext(private val originalKey: String) : MessageContext {
+        override fun send(message: String) {
+            send(originalKey, message)
         }
 
-        override fun publish(message: String) {}
-        override fun publish(key: String, message: String) {}
-        override fun start() {}
-        override fun stop() {}
-        private inner class TestContext(private val originalKey: String) : MessageContext {
-            override fun send(message: String) {
-                send(originalKey, message)
-            }
-
-            override fun send(key: String, message: String) {
-                sentMessages.add(key to objectMapper.readTree(message))
-            }
+        override fun send(key: String, message: String) {
+            sentMessages.add(key to objectMapper.readTree(message))
         }
     }
 }
+
+private fun JsonNode.medLøsning(løsning: String) =
+    (this.deepCopy() as ObjectNode).set<ObjectNode>("@løsning", objectMapper.readTree(løsning))
+        .toString()

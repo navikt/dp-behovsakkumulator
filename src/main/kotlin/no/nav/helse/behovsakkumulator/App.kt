@@ -1,4 +1,4 @@
-package no.nav.helse.behovsakkumulator
+package no.nav.dagpenger.behovsakkumulator
 
 import no.nav.helse.rapids_rivers.RapidApplication
 

@@ -1,4 +1,4 @@
-package no.nav.helse.behovsakkumulator
+package no.nav.dagpenger.behovsakkumulator
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -11,6 +11,8 @@ import no.nav.helse.rapids_rivers.asLocalDateTime
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+// private val log = KotlinLogging.logger {}
+// private val sikkerLog = LoggerFactory.getLogger("tjenestekall")
 class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListener {
     private val log = LoggerFactory.getLogger(this::class.java)
     private val sikkerLog = LoggerFactory.getLogger("tjenestekall")
