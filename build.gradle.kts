@@ -21,6 +21,7 @@ dependencies {
 
     testImplementation(KoTest.runner)
     testImplementation(KoTest.assertions)
+    testImplementation(KoTest.property)
     testImplementation(Mockk.mockk)
 }
 
@@ -81,6 +82,5 @@ tasks.withType<Test> {
             org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
             org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
         )
-        showStandardStreams = true
     }
 }
