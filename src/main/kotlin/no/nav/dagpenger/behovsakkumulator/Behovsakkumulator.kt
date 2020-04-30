@@ -2,20 +2,18 @@ package no.nav.dagpenger.behovsakkumulator
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import net.logstash.logback.argument.StructuredArguments.keyValue
+import java.time.LocalDateTime
+import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 
-// private val log = KotlinLogging.logger {}
-// private val sikkerLog = LoggerFactory.getLogger("tjenestekall")
+private val log = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
+
 class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListener {
-    private val log = LoggerFactory.getLogger(this::class.java)
-    private val sikkerLog = LoggerFactory.getLogger("tjenestekall")
     private val behovUtenLøsning = mutableMapOf<String, Pair<RapidsConnection.MessageContext, JsonMessage>>()
 
     init {
@@ -27,16 +25,16 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
     }
 
     override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
-        loggBehov(log, packet)
-        loggBehov(sikkerLog, packet)
+        loggBehov(packet)
         val id = packet["@id"].asText()
         val resultat = behovUtenLøsning[id]?.also { it.second.kombinerLøsninger(packet) } ?: (context to packet)
 
         if (resultat.second.erKomplett()) {
             resultat.second["@final"] = true
             resultat.second["@besvart"] = LocalDateTime.now().toString()
-            loggLøstBehov(log, resultat.second)
-            loggLøstBehov(sikkerLog, resultat.second)
+
+            loggLøstBehov(resultat.second)
+
             resultat.first.send(resultat.second.toJson())
             behovUtenLøsning.remove(id)
         } else {
@@ -60,34 +58,55 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         packet["@løsning"].fields().forEach { (behovtype, delløsning) ->
             løsning.set<JsonNode>(behovtype, delløsning)
         }
-        loggKombinering(log, this)
-        loggKombinering(sikkerLog, this)
+
+        loggKombinering(this)
     }
 
-    private fun loggLøstBehov(logger: Logger, løsning: JsonMessage) {
-        logger.info(
-            "Markert behov med {} ({}) som final",
-            keyValue("id", løsning["@id"].asText()),
-            keyValue("vedtakId", løsning["vedtakId"].asText())
-        )
+    private fun loggBehov(packet: JsonMessage) {
+        withLoggingContext(
+            "behovId" to packet["@id"].asText(),
+            "vedtakId" to packet["vedtakId"].asText()
+        ) {
+            listOf(log, sikkerLogg).forEach { logger ->
+                logger.info {
+                    val løsninger = packet["@løsning"].fieldNames().asSequence().joinToString(", ")
+
+                    "Mottok $løsninger"
+                }
+            }
+        }
     }
 
-    private fun loggKombinering(logger: Logger, løsningPacket: JsonMessage) {
-        logger.info(
-            "Satt sammen {} for behov med id {} ({}). Forventer {}",
-            keyValue("løsninger", løsningPacket["@løsning"].fieldNames().asSequence().joinToString(", ")),
-            keyValue("id", løsningPacket["@id"].asText()),
-            keyValue("vedtakId", løsningPacket["vedtakId"].asText()),
-            keyValue("behov", løsningPacket["@behov"].joinToString(", ", transform = JsonNode::asText))
-        )
+    private fun loggKombinering(packet: JsonMessage) {
+        withLoggingContext(
+            "behovId" to packet["@id"].asText(),
+            "vedtakId" to packet["vedtakId"].asText()
+        ) {
+            listOf(log, sikkerLogg).forEach { logger ->
+                logger.info {
+                    val løsninger = packet["@løsning"].fieldNames().asSequence().toList()
+                    val behov = packet["@behov"].map(JsonNode::asText)
+                    val mangler = behov.minus(løsninger)
+                    val melding = "Satt sammen løsninger for [${løsninger.joinToString(", \n\t", "\n\t", "\n")}]. "
+
+                    if (mangler.isEmpty()) return@info "Ferdig! $melding"
+
+                    melding + "Venter fortsatt på løsninger for [${mangler.joinToString(", \n\t", "\n\t", "\n")}]"
+                }
+            }
+        }
     }
 
-    private fun loggBehov(logger: Logger, packet: JsonMessage) {
-        logger.info(
-            "Mottok {} for behov med {} ({})",
-            keyValue("løsninger", packet["@løsning"].fieldNames().asSequence().joinToString(", ")),
-            keyValue("id", packet["@id"].asText()),
-            keyValue("vedtakId", packet["vedtakId"].asText())
-        )
+    private fun loggLøstBehov(packet: JsonMessage) {
+        withLoggingContext(
+            "behovId" to packet["@id"].asText(),
+            "vedtakId" to packet["vedtakId"].asText()
+        ) {
+            listOf(log, sikkerLogg).forEach { logger ->
+                logger.info {
+                    "Markert behov som final"
+                }
+            }
+        }
     }
 }

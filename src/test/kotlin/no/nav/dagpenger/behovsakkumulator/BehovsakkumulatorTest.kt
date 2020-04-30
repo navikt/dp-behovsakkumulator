@@ -39,7 +39,7 @@ internal class BehovsakkumulatorTest : ShouldSpec({
 
     should("kombinere ett eller flere delsvar til et komplett svar") {
         checkAll(
-            100,
+            muligeBehov.size,
             Arb.uuid(),
             Arb.choice(
                 Arb.shuffle(muligeBehov),

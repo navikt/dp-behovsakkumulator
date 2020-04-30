@@ -82,5 +82,6 @@ tasks.withType<Test> {
             org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
             org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
         )
+        showStandardStreams = true
     }
 }
