@@ -2,13 +2,13 @@ package no.nav.dagpenger.behovsakkumulator
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import java.time.LocalDateTime
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
+import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -71,7 +71,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                 logger.info {
                     val løsninger = packet["@løsning"].fieldNames().asSequence().joinToString(", ")
 
-                    "Mottok $løsninger"
+                    "Mottok løsning for $løsninger"
                 }
             }
         }
@@ -87,11 +87,11 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                     val løsninger = packet["@løsning"].fieldNames().asSequence().toList()
                     val behov = packet["@behov"].map(JsonNode::asText)
                     val mangler = behov.minus(løsninger)
-                    val melding = "Satt sammen løsninger for [${løsninger.joinToString(", \n\t", "\n\t", "\n")}]. "
+                    val melding = "Har løsninger for [${løsninger.joinToString(", \n\t", "\n\t", "\n")}]. "
 
                     if (mangler.isEmpty()) return@info "Ferdig! $melding"
 
-                    melding + "Venter fortsatt på løsninger for [${mangler.joinToString(", \n\t", "\n\t", "\n")}]"
+                    melding + "Venter på løsninger for [${mangler.joinToString(", \n\t", "\n\t", "\n")}]"
                 }
             }
         }
