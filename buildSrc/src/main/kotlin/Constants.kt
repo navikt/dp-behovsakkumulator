@@ -7,7 +7,7 @@
  */
 
 object Avro {
-    const val avro = "org.apache.avro:avro:1.8.2"
+    const val avro = "org.apache.avro:avro:1.9.2"
 }
 
 object Bekk {
@@ -181,7 +181,7 @@ object Moshi {
 }
 
 object Mockk {
-    const val version = "1.9.3"
+    const val version = "1.10.0"
     const val mockk = "io.mockk:mockk:$version"
 }
 
