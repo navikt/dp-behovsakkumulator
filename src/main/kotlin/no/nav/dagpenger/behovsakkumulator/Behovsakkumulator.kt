@@ -3,6 +3,7 @@ package no.nav.dagpenger.behovsakkumulator
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import java.time.LocalDateTime
+import java.util.UUID
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -42,16 +43,47 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                 .filterValues { (_, packet) ->
                     packet["@opprettet"].asLocalDateTime().isBefore(LocalDateTime.now().minusMinutes(30))
                 }
-                .forEach { (key, _) -> behovUtenLøsning.remove(key) }
+                .forEach { (key, _) ->
+                    behovUtenLøsning.remove(key).also {
+                        if (it != null) {
+                            sendUfullstendigBehovEvent(it)
+                        }
+                    }
+                }
             behovUtenLøsning[id] = resultat
         }
     }
 
-    private fun JsonMessage.erKomplett(): Boolean {
-        val løsninger = this["@løsning"].fieldNames().asSequence().toList()
-        val behov = this["@behov"].map(JsonNode::asText)
-        return behov.all { it in løsninger }
+    private fun sendUfullstendigBehovEvent(pair: Pair<RapidsConnection.MessageContext, JsonMessage>) {
+
+        val (context, behov) = pair
+        val forventninger = behov.forventninger()
+        val løsninger = behov.løsninger()
+        val mangler = forventninger.minus(løsninger)
+        loggUfullstendingBehov(behov, mangler)
+        val behovId = behov["@id"].asText()
+        context.send(
+            behovId, JsonMessage.newMessage(
+                mapOf(
+                    "@event_name" to "behov_uten_fullstendig_løsning",
+                    "@id" to UUID.randomUUID(),
+                    "@opprettet" to LocalDateTime.now(),
+                    "behov_id" to behovId,
+                    "behov_opprettet" to behov["@opprettet"].asLocalDateTime(),
+                    "forventet" to forventninger,
+                    "løsninger" to løsninger,
+                    "mangler" to mangler,
+                    "ufullstendig_behov" to behov.toJson()
+                )
+            ).toJson()
+        )
     }
+
+    private fun JsonMessage.erKomplett(): Boolean = this.forventninger().all { it in this.løsninger() }
+
+    private fun JsonMessage.forventninger(): List<String> = this["@behov"].map(JsonNode::asText)
+
+    private fun JsonMessage.løsninger(): List<String> = this["@løsning"].fieldNames().asSequence().toList()
 
     private fun JsonMessage.kombinerLøsninger(packet: JsonMessage) {
         val løsning = this["@løsning"] as ObjectNode
@@ -105,6 +137,19 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
             listOf(log, sikkerLogg).forEach { logger ->
                 logger.info {
                     "Markert behov som final"
+                }
+            }
+        }
+    }
+
+    private fun loggUfullstendingBehov(packet: JsonMessage, mangler: List<String>) {
+        withLoggingContext(
+            "behovId" to packet["@id"].asText(),
+            "vedtakId" to packet["vedtakId"].asText()
+        ) {
+            listOf(log, sikkerLogg).forEach { logger ->
+                logger.error {
+                    "Mottok aldri løsning for ${mangler.joinToString { it }} innen 30 minutter."
                 }
             }
         }
