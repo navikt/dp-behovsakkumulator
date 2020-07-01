@@ -20,14 +20,14 @@ spec:
     path: /metrics
   replicas:
     max: 3
-    min: 3
+    min: 6
   resources:
     limits:
+      cpu: 1000m
+      memory: 2024Mi
+    requests:
       cpu: 500m
       memory: 1024Mi
-    requests:
-      cpu: 200m
-      memory: 512Mi
   secureLogs:
     enabled: true
   vault:
