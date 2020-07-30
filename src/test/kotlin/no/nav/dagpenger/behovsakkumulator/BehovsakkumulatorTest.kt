@@ -20,9 +20,9 @@ import io.kotest.property.arbitrary.shuffle
 import io.kotest.property.arbitrary.subsequence
 import io.kotest.property.arbitrary.uuid
 import io.kotest.property.checkAll
-import java.time.LocalDateTime
 import no.nav.helse.rapids_rivers.asLocalDateTime
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import java.time.LocalDateTime
 
 internal class BehovsakkumulatorTest : ShouldSpec({
     lateinit var rapid: TestRapid
