@@ -2,14 +2,14 @@ package no.nav.dagpenger.behovsakkumulator
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import java.time.LocalDateTime
-import java.util.UUID
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
+import java.time.LocalDateTime
+import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -63,7 +63,8 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         loggUfullstendingBehov(behov, mangler)
         val behovId = behov["@id"].asText()
         context.send(
-            behovId, JsonMessage.newMessage(
+            behovId,
+            JsonMessage.newMessage(
                 mapOf(
                     "@event_name" to "behov_uten_fullstendig_løsning",
                     "@id" to UUID.randomUUID(),
