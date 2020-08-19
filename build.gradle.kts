@@ -19,6 +19,7 @@ dependencies {
 
     implementation(RapidAndRivers)
     implementation(Kotlin.Logging.kotlinLogging)
+    implementation(Ktor.serverNetty)
 
     testImplementation(KoTest.runner)
     testImplementation(KoTest.assertions)
