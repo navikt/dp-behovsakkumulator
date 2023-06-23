@@ -1,39 +1,34 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-    kotlin("jvm") version "1.3.70"
-    id(Spotless.spotless) version Spotless.version
+    kotlin("jvm") version "1.8.22"
+    id("com.diffplug.spotless") version "6.19.0"
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 group = "no.nav.dagpenger"
 
 repositories {
     mavenCentral()
-    jcenter()
     maven("https://jitpack.io")
     maven("https://packages.confluent.io/maven/")
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
+    implementation("com.github.navikt:rapids-and-rivers:2023060108511685602318.b6acfa4d79a1")
+    implementation("io.github.microutils:kotlin-logging:3.0.5")
 
-    implementation(RapidAndRivers)
-    implementation(Kotlin.Logging.kotlinLogging)
-    implementation(Ktor.serverNetty)
-
-    testImplementation(KoTest.runner)
-    testImplementation(KoTest.assertions)
-    testImplementation(KoTest.property)
-    testImplementation(Mockk.mockk)
+    implementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.5.5")
+    testImplementation("io.mockk:mockk:1.13.4")
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
-
-tasks.withType<KotlinCompile>().all {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
+tasks {
+    test {
+        useJUnitPlatform()
+    }
 }
 
 tasks.named<Jar>("jar") {
@@ -49,23 +44,20 @@ tasks.named<Jar>("jar") {
     doLast {
         configurations.runtimeClasspath.get().forEach {
             val file = File("$buildDir/libs/${it.name}")
-            if (!file.exists())
+            if (!file.exists()) {
                 it.copyTo(file)
+            }
         }
     }
 }
 
-tasks.withType<Wrapper> {
-    gradleVersion = "6.0.1"
-}
-
 spotless {
     kotlin {
-        ktlint(Ktlint.version)
+        ktlint()
     }
     kotlinGradle {
-        target("*.gradle.kts", "buildSrc/**/*.kt*")
-        ktlint(Ktlint.version)
+        target("*.gradle.kts")
+        ktlint()
     }
 }
 
@@ -82,7 +74,7 @@ tasks.withType<Test> {
         events = setOf(
             org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
             org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
-            org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED
+            org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
         )
         showStandardStreams = true
     }

@@ -130,10 +130,7 @@ object Kotlin {
         fun module(name: String) = "org.jetbrains.kotlinx:kotlinx-coroutines-$name:$version"
     }
 
-    object Logging {
-        const val version = "2.0.4"
-        const val kotlinLogging = "io.github.microutils:kotlin-logging:$version"
-    }
+    object Logging
 }
 
 object KoTest {
@@ -198,10 +195,7 @@ object Moshi {
     fun library(name: String) = "com.squareup.moshi:moshi-$name:$version"
 }
 
-object Mockk {
-    const val version = "1.10.6"
-    const val mockk = "io.mockk:mockk:$version"
-}
+object Mockk
 
 object Nare {
     const val version = "768ae37"
@@ -220,8 +214,6 @@ object Prometheus {
         const val prometheus = "no.nav:nare-prometheus:$version"
     }
 }
-
-const val RapidAndRivers = "com.github.navikt:rapids-and-rivers:1.6d6256d"
 
 object Slf4j {
     const val version = "1.7.25"

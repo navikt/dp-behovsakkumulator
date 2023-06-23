@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
@@ -15,17 +16,20 @@ private val log = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListener {
-    private val behovUtenLøsning = mutableMapOf<String, Pair<RapidsConnection.MessageContext, JsonMessage>>()
+    private val behovUtenLøsning = mutableMapOf<String, Pair<MessageContext, JsonMessage>>()
 
     init {
         River(rapidsConnection).apply {
             validate { it.forbid("@final") }
-            validate { it.requireKey("@id", "@behov", "@løsning", "vedtakId") }
+            validate { it.requireKey("@id", "@løsning") }
             validate { it.require("@opprettet", JsonNode::asLocalDateTime) }
+            validate {
+                it.require("@behov") { behov -> behov.size() > 1 }
+            }
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: RapidsConnection.MessageContext) {
+    override fun onPacket(packet: JsonMessage, context: MessageContext) {
         loggBehov(packet)
         val id = packet["@id"].asText()
         val resultat = behovUtenLøsning[id]?.also { it.second.kombinerLøsninger(packet) } ?: (context to packet)
@@ -35,8 +39,9 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
             resultat.second["@besvart"] = LocalDateTime.now().toString()
 
             loggLøstBehov(resultat.second)
-
-            resultat.first.send(resultat.second.toJson())
+            val message = resultat.second.toJson()
+            println(message)
+            resultat.first.publish(message)
             behovUtenLøsning.remove(id)
         } else {
             behovUtenLøsning
@@ -54,15 +59,14 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         }
     }
 
-    private fun sendUfullstendigBehovEvent(pair: Pair<RapidsConnection.MessageContext, JsonMessage>) {
-
+    private fun sendUfullstendigBehovEvent(pair: Pair<MessageContext, JsonMessage>) {
         val (context, behov) = pair
         val forventninger = behov.forventninger()
         val løsninger = behov.løsninger()
         val mangler = forventninger.minus(løsninger)
         loggUfullstendingBehov(behov, mangler)
         val behovId = behov["@id"].asText()
-        context.send(
+        context.publish(
             behovId,
             JsonMessage.newMessage(
                 mapOf(
@@ -74,9 +78,9 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                     "forventet" to forventninger,
                     "løsninger" to løsninger,
                     "mangler" to mangler,
-                    "ufullstendig_behov" to behov.toJson()
-                )
-            ).toJson()
+                    "ufullstendig_behov" to behov.toJson(),
+                ),
+            ).toJson(),
         )
     }
 
@@ -98,13 +102,11 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
     private fun loggBehov(packet: JsonMessage) {
         withLoggingContext(
             "behovId" to packet["@id"].asText(),
-            "vedtakId" to packet["vedtakId"].asText()
         ) {
             listOf(log, sikkerLogg).forEach { logger ->
                 logger.info {
                     val løsninger = packet["@løsning"].fieldNames().asSequence().joinToString(", ")
-
-                    "Mottok løsning for $løsninger"
+                    packet["@id"].asText() + "Mottok løsning for $løsninger"
                 }
             }
         }
@@ -113,7 +115,6 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
     private fun loggKombinering(packet: JsonMessage) {
         withLoggingContext(
             "behovId" to packet["@id"].asText(),
-            "vedtakId" to packet["vedtakId"].asText()
         ) {
             listOf(log, sikkerLogg).forEach { logger ->
                 logger.info {
@@ -133,7 +134,6 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
     private fun loggLøstBehov(packet: JsonMessage) {
         withLoggingContext(
             "behovId" to packet["@id"].asText(),
-            "vedtakId" to packet["vedtakId"].asText()
         ) {
             listOf(log, sikkerLogg).forEach { logger ->
                 logger.info {
@@ -146,7 +146,6 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
     private fun loggUfullstendingBehov(packet: JsonMessage, mangler: List<String>) {
         withLoggingContext(
             "behovId" to packet["@id"].asText(),
-            "vedtakId" to packet["vedtakId"].asText()
         ) {
             listOf(log, sikkerLogg).forEach { logger ->
                 logger.error {
