@@ -56,7 +56,7 @@ internal class BehovsakkumulatorTest {
         val behov = listOf("Dagpenger")
         behovFor(
             behovId = UUID.randomUUID().toString(),
-            behov = *behov.toTypedArray(),
+            behov = behov.toTypedArray(),
         ).apply {
             rapid.sendTestMessage(this.toString())
         }.also {
@@ -75,7 +75,7 @@ internal class BehovsakkumulatorTest {
     fun `kombinere ett eller flere delsvar til et komplett svar`(behovId: UUID, genererteBehov: List<String>) {
         behovFor(
             behovId = behovId.toString(),
-            behov = *genererteBehov.toTypedArray(),
+            behov = genererteBehov.toTypedArray(),
         ).apply {
             rapid.sendTestMessage(this.toString())
         }.also {
@@ -102,7 +102,7 @@ internal class BehovsakkumulatorTest {
     fun `sende ufullstending event ved mangel av løsninger på behov`(behovId: UUID, genererteBehov: List<String>) {
         behovFor(
             behovId = behovId.toString(),
-            behov = *genererteBehov.toTypedArray(),
+            behov = genererteBehov.toTypedArray(),
             opprettet = LocalDateTime.now().minusHours(1), // Manipulate time to trigger 30 minute threshold
         ).apply {
             rapid.sendTestMessage(this.toString())

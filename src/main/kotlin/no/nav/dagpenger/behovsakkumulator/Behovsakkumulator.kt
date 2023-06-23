@@ -47,7 +47,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                 resultat.second["@final"] = true
                 resultat.second["@besvart"] = LocalDateTime.now().toString()
 
-                loggLøstBehov(resultat.second)
+                loggLøstBehov()
 
                 resultat.first.publish(resultat.second.toJson())
                 behovUtenLøsning.remove(behovId)
@@ -74,7 +74,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         val løsninger = behov.løsninger()
         val mangler = forventninger.minus(løsninger)
 
-        loggUfullstendingBehov(behov, mangler)
+        loggUfullstendingBehov(mangler)
 
         val behovId = behov["@behovId"].asText()
         context.publish(
@@ -132,7 +132,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         }
     }
 
-    private fun loggLøstBehov(packet: JsonMessage) {
+    private fun loggLøstBehov() {
         listOf(log, sikkerlogg).forEach { logger ->
             logger.info {
                 "Markert behov som final"
@@ -140,7 +140,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         }
     }
 
-    private fun loggUfullstendingBehov(packet: JsonMessage, mangler: Set<String>) {
+    private fun loggUfullstendingBehov(mangler: Set<String>) {
         listOf(log, sikkerlogg).forEach { logger ->
             logger.error { "Mottok aldri løsning for ${mangler.joinToString { it }} innen 30 minutter." }
         }
