@@ -1,0 +1,39 @@
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  name: dp-behovsakkumulator
+  namespace: teamdagpenger
+  labels:
+    team: teamdagpenger
+spec:
+  image: {{ image }}
+  port: 8080
+  liveness:
+    path: /isalive
+  readiness:
+    path: /isready
+  startup:
+    path: /isready
+    initialDelay: 5
+  prometheus:
+    enabled: true
+    path: /metrics
+  replicas:
+    max: 6
+    min: 2
+    cpuThresholdPercentage: 90
+  resources:
+    limits:
+      memory: 2024Mi
+    requests:
+      cpu: 500m
+      memory: 128Mi
+  secureLogs:
+    enabled: true
+  kafka:
+    pool: nav-prod
+  env:
+    - name: KAFKA_CONSUMER_GROUP_ID
+      value: dp-behovsakkumulator-v1
+    - name: KAFKA_RAPID_TOPIC
+      value: teamdagpenger.rapid.v1

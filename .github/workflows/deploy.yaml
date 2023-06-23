@@ -1,71 +1,79 @@
-name: Bygg og deploy ved push til master
+name: Build and deploy
 
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
   push:
     branches:
       - main
-
-env:
-  IMAGE: docker.pkg.github.com/${{ github.repository }}/dp-behovsakkumulator:${{ github.sha }}
+    branches-ignore:
+      - 'dependabot/**'
 
 jobs:
   build:
-    name: Build and push Docker container
+    name: Build and publish Docker image
     runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      checks: "write"
+      id-token: "write"
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-cache-${{ hashFiles('build.gradle.kts') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-cache-
-      - uses: actions/cache@v3
-        with:
-          path: ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-wrapper-
       - uses: actions/setup-java@v3
         with:
-          java-version: '12.x'
-      - name: test and build
-        run: ./gradlew test build
-        env:
-          ORG_GRADLE_PROJECT_githubUser: x-access-token
-          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and publish Docker image
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          docker build --pull --tag ${IMAGE} .
-          docker login docker.pkg.github.com -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
-          docker push ${IMAGE}
+          distribution: temurin
+          java-version: 19
 
-#  deploy_to_dev:
-#    name: Deploy to dev
-#    needs: build
+      - uses: gradle/gradle-build-action@v2.4.2
+        with:
+          arguments: --configuration-cache build installDist
+
+      - name: Publish results (unit test)
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: success() || failure()
+        with:
+          junit_files: "**/build/test-results/test/TEST-*.xml"
+
+      - uses: gradle/gradle-build-action@v2.4.2
+        with:
+          arguments: :mediator:cyclonedxBom
+
+      - name: docker-build-push
+        uses: nais/docker-build-push@v0
+        id: docker-build-push
+        with:
+          byosbom: mediator/build/reports/bom.json
+          team: teamdagpenger
+          tag: ${{ github.sha }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+    outputs:
+      image: ${{ steps.docker-build-push.outputs.image }}
+
+  deploy-dev:
+    name: Deploy to dev
+    needs: [ build ]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: dev-gcp
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/nais.yaml
+          VAR: image=${{ needs.build.outputs.image }}
+          PRINT_PAYLOAD: true
+
+#  deploy-prod:
+#    name: Deploy to Production
+#    needs: [ build ]
 #    if: github.ref == 'refs/heads/main'
 #    runs-on: ubuntu-latest
 #    steps:
-#      -   uses: actions/checkout@v3
-#      -   uses: nais/deploy/actions/deploy@v1
-#          env:
-#            APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-#            CLUSTER: dev-fss
-#            RESOURCE: nais/dev/nais.yaml,nais/dev/alerts.yaml
-#
-#  deploy_to_prod:
-#    name: Deploy to prod
-#    needs: [build, deploy_to_dev]
-#    if: github.ref == 'refs/heads/main'
-#    runs-on: ubuntu-latest
-#    steps:
-#      -  uses: actions/checkout@v3
-#      -  uses: nais/deploy/actions/deploy@v1
-#         env:
-#           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-#           CLUSTER: prod-fss
-#           RESOURCE: nais/prod/nais.yaml,nais/prod/alerts.yaml
+#      - uses: actions/checkout@v3
+#      - uses: nais/deploy/actions/deploy@v1
+#        env:
+#          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+#          CLUSTER: prod-gcp
+#          RESOURCE: .nais/nais.yaml
+#          PRINT_PAYLOAD: true

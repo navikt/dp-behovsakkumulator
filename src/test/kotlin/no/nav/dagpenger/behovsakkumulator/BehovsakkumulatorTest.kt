@@ -13,6 +13,7 @@ import no.nav.helse.rapids_rivers.asLocalDateTime
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -45,21 +46,33 @@ internal class BehovsakkumulatorTest {
             Arguments.of(UUID.randomUUID(), muligeBehov.shuffled()),
             Arguments.of(
                 UUID.randomUUID(),
-                muligeBehov.shuffled().subList(2, 3),
-            ),
-            Arguments.of(
-                UUID.randomUUID(),
-                muligeBehov.shuffled().subList(0, 1),
+                muligeBehov.shuffled().subList(2, 4),
             ),
         )
+    }
+
+    @Test
+    fun `pakker med bare ett behov skal ikke akkumuleres`() {
+        val behov = listOf("Dagpenger")
+        behovFor(
+            behovId = UUID.randomUUID().toString(),
+            behov = *behov.toTypedArray(),
+        ).apply {
+            rapid.sendTestMessage(this.toString())
+        }.also {
+            behov.forEach { behov: String ->
+                rapid.sendTestMessage(it.medLøsning("""{ "$behov": [] }"""))
+            }
+        }
+
+        with(rapid.inspektør) {
+            size.shouldBe(0)
+        }
     }
 
     @ParameterizedTest
     @MethodSource("behovProvider")
     fun `kombinere ett eller flere delsvar til et komplett svar`(behovId: UUID, genererteBehov: List<String>) {
-        // Skip empty lists
-        if (genererteBehov.isEmpty()) return
-
         behovFor(
             behovId = behovId.toString(),
             behov = *genererteBehov.toTypedArray(),
@@ -73,7 +86,7 @@ internal class BehovsakkumulatorTest {
 
         with(rapid.inspektør) {
             size.shouldBe(1)
-            field(0, "@id").asText() shouldBe behovId.toString()
+            field(0, "@behovId").asText() shouldBe behovId.toString()
 
             field(0, "@final").asBoolean() shouldBe true
             løsningerI(field(0, "@løsning")).containsAll(genererteBehov) shouldBe true
@@ -87,9 +100,6 @@ internal class BehovsakkumulatorTest {
     @ParameterizedTest
     @MethodSource("behovProvider")
     fun `sende ufullstending event ved mangel av løsninger på behov`(behovId: UUID, genererteBehov: List<String>) {
-        // Skip empty lists
-        if (genererteBehov.isEmpty()) return
-
         behovFor(
             behovId = behovId.toString(),
             behov = *genererteBehov.toTypedArray(),
@@ -121,7 +131,8 @@ internal class BehovsakkumulatorTest {
 fun behovFor(behovId: String, vararg behov: String, opprettet: LocalDateTime = LocalDateTime.now()): JsonNode =
     objectMapper.readTree(
         """{
-          "@id": "$behovId",
+          "@id": "${UUID.randomUUID()}",
+          "@behovId": "$behovId",
           "@opprettet": "$opprettet",
           "@behov": [
             ${behov.joinToString { "\"${it}\"" }}
