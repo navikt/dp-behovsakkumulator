@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.8.22"
+    application
     id("com.diffplug.spotless") version "6.19.0"
 }
 
@@ -7,7 +8,9 @@ kotlin {
     jvmToolchain(17)
 }
 
-group = "no.nav.dagpenger"
+application {
+    mainClass.set("no.nav.dagpenger.behovsakkumulator.AppKt")
+}
 
 repositories {
     mavenCentral()
@@ -26,28 +29,17 @@ dependencies {
 }
 
 tasks {
+    jar {
+        manifest {
+            attributes["Main-Class"] = application.mainClass
+        }
+
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        archiveFileName.set("${project.name}-fat.jar")
+        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    }
     test {
         useJUnitPlatform()
-    }
-}
-
-tasks.named<Jar>("jar") {
-    archiveBaseName.set("app")
-
-    manifest {
-        attributes["Main-Class"] = "no.nav.dagpenger.behovsakkumulator.AppKt"
-        attributes["Class-Path"] = configurations.runtimeClasspath.get().joinToString(separator = " ") {
-            it.name
-        }
-    }
-
-    doLast {
-        configurations.runtimeClasspath.get().forEach {
-            val file = File("$buildDir/libs/${it.name}")
-            if (!file.exists()) {
-                it.copyTo(file)
-            }
-        }
     }
 }
 
