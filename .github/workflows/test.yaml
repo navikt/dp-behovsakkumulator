@@ -2,8 +2,6 @@ name: Test Dependabot PRs
 
 on:
   push:
-    branches:
-      - 'dependabot/**'
 
 jobs:
   test:
