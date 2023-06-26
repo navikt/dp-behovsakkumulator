@@ -1,8 +1,9 @@
-name: lint
+name: Lint
 on: [push]
 
 jobs:
   code-style-violations:
+    name: ktlint
     runs-on: ubuntu-latest
 
     steps:
