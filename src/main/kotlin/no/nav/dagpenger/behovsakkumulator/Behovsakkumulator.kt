@@ -133,7 +133,8 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
     }
 
     private fun loggLøstBehov() {
-        listOf(log, sikkerlogg).forEach { logger ->
+        listOf(log, sikkerlogg).forEach {
+        logger ->
             logger.info {
                 "Markert behov som final"
             }
