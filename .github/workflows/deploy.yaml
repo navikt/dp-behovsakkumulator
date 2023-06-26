@@ -59,6 +59,7 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: .nais/nais.yaml
           VAR: image=${{ needs.build.outputs.image }}
+          VARS: .nais/vars-dev.yaml
           PRINT_PAYLOAD: true
 
 #  deploy-prod:
@@ -71,4 +72,5 @@ jobs:
 #          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
 #          CLUSTER: prod-gcp
 #          RESOURCE: .nais/nais.yaml
+#          VARS: .nais/vars-prod.yaml
 #          PRINT_PAYLOAD: true
