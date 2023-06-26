@@ -1,4 +1,4 @@
-name: Test Dependabot PRs
+name: Test
 
 on:
   push:

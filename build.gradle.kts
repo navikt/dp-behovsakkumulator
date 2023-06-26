@@ -32,6 +32,9 @@ dependencies {
 }
 
 tasks {
+    build {
+        dependsOn("spotlessApply")
+    }
     jar {
         manifest {
             attributes["Main-Class"] = application.mainClass
@@ -54,10 +57,6 @@ spotless {
         target("*.gradle.kts")
         ktlint()
     }
-}
-
-tasks.named("spotlessCheck") {
-    dependsOn("compileKotlin")
 }
 
 tasks.withType<Test> {
