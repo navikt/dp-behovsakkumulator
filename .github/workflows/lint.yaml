@@ -1,9 +1,7 @@
-name: ktlint
 on: [push]
 
 jobs:
   code-style-violations:
-    name: Check coding style violations
     runs-on: ubuntu-latest
 
     steps:
