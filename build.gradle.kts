@@ -46,6 +46,17 @@ tasks {
     }
     test {
         useJUnitPlatform()
+        testLogging {
+            showExceptions = true
+            showStackTraces = true
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            events = setOf(
+                org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
+                org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
+                org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
+            )
+            showStandardStreams = true
+        }
     }
 }
 
@@ -56,20 +67,5 @@ spotless {
     kotlinGradle {
         target("*.gradle.kts")
         ktlint()
-    }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        showExceptions = true
-        showStackTraces = true
-        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-        events = setOf(
-            org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
-            org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
-            org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
-        )
-        showStandardStreams = true
     }
 }
