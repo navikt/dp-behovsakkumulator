@@ -19,7 +19,7 @@ jobs:
           distribution: temurin
           java-version: 19
 
-      - uses: gradle/gradle-build-action@v2.5.1
+      - uses: gradle/gradle-build-action@v2.6.0
         with:
           #arguments: --configuration-cache build
           arguments: build
@@ -30,7 +30,7 @@ jobs:
         with:
           junit_files: "**/build/test-results/test/TEST-*.xml"
 
-      - uses: gradle/gradle-build-action@v2.5.1
+      - uses: gradle/gradle-build-action@v2.6.0
         with:
           arguments: cyclonedxBom
 
