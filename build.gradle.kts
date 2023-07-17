@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:2023062911391688031585.522193a413de")
+    implementation("com.github.navikt:rapids-and-rivers:2023071621171689535073.b95a845e365c")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
 
     implementation(kotlin("test"))
