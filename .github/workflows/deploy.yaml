@@ -21,6 +21,7 @@ jobs:
 
       - uses: gradle/gradle-build-action@v2.6.1
         with:
+          dependency-graph: generate-and-submit
           #arguments: --configuration-cache build
           arguments: build
 
