@@ -23,8 +23,7 @@ jobs:
         id: gradle-build
         with:
           dependency-graph: generate-and-submit
-          #arguments: --configuration-cache build
-          arguments: build
+          arguments: --configuration-cache build
 
       - name: Publish results (unit test)
         uses: EnricoMi/publish-unit-test-result-action@v2
