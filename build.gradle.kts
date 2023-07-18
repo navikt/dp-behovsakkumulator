@@ -1,3 +1,5 @@
+import com.diffplug.spotless.LineEnding
+
 plugins {
     kotlin("jvm") version "1.8.22"
     application
@@ -67,4 +69,6 @@ spotless {
         target("*.gradle.kts")
         ktlint()
     }
+    // https://github.com/diffplug/spotless/issues/1644
+    lineEndings = LineEnding.PLATFORM_NATIVE // or any other except GIT_ATTRIBUTES
 }
