@@ -20,6 +20,7 @@ jobs:
           java-version: 19
 
       - uses: gradle/gradle-build-action@v2.6.1
+        id: gradle-build
         with:
           dependency-graph: generate-and-submit
           #arguments: --configuration-cache build
@@ -31,15 +32,11 @@ jobs:
         with:
           junit_files: "**/build/test-results/test/TEST-*.xml"
 
-      - uses: gradle/gradle-build-action@v2.6.1
-        with:
-          arguments: cyclonedxBom
-
       - name: docker-build-push
         uses: nais/docker-build-push@v0
         id: docker-build-push
         with:
-          byosbom: build/reports/bom.json
+          byosbom: dependency-graph-reports/deploy-build.json
           team: teamdagpenger
           tag: ${{ github.sha }}
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
