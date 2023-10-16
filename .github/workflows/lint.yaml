@@ -8,4 +8,4 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: musichin/ktlint-check@v2
+      - uses: musichin/ktlint-check@v3
