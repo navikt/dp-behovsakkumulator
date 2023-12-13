@@ -1,9 +1,9 @@
 import com.diffplug.spotless.LineEnding
 
 plugins {
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "1.9.21"
     application
-    id("com.diffplug.spotless") version "6.20.0"
+    id("com.diffplug.spotless") version "6.23.3"
 }
 
 kotlin {
@@ -23,13 +23,13 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:2023080113411690890096.310ed8e5ed93")
+    implementation("com.github.navikt:rapids-and-rivers:2023101613431697456627.0cdd93eb696f")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
 
     implementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:5.6.2")
-    testImplementation("io.mockk:mockk:1.13.7")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.1")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.8.0")
+    testImplementation("io.mockk:mockk:1.13.8")
 }
 
 tasks {
