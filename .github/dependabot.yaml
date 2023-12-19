@@ -14,7 +14,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-      time: "15:54"
+      time: "10:00"
       timezone: "Europe/Oslo"
   # Maintain dependencies for docker
   - package-ecosystem: "docker"
