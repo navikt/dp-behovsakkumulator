@@ -13,14 +13,9 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
-      interval: "weekly"
-      time: "12:20"
-      day: "wednesday"
+      interval: "daily"
+      time: "15:50"
       timezone: "Europe/Oslo"
-    groups:
-      gradle:
-        patterns:
-          - "*"
   # Maintain dependencies for docker
   - package-ecosystem: "docker"
     directory: "/"
