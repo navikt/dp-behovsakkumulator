@@ -1,11 +1,19 @@
-name: Lint
+name: reviewdog
 on: [push]
 
 jobs:
   code-style-violations:
-    name: ktlint
+    name: Check coding style violations
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: musichin/ktlint-check@v3
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+      - name: ktlint
+        uses: ScaCap/action-ktlint@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          ktlint_version: 1.0.0
