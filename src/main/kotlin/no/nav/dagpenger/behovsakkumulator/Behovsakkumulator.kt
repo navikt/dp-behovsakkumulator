@@ -33,7 +33,10 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+    ) {
         val behovId = packet["@behovId"].asText()
 
         withLoggingContext(

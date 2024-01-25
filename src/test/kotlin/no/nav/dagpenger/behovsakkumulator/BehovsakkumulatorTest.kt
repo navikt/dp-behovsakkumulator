@@ -27,28 +27,31 @@ internal class BehovsakkumulatorTest {
 
     @BeforeEach
     fun setup() {
-        rapid = TestRapid().apply {
-            Behovsakkumulator(rapidsConnection = this)
-        }
+        rapid =
+            TestRapid().apply {
+                Behovsakkumulator(rapidsConnection = this)
+            }
     }
 
     private companion object {
-        private val muligeBehov = listOf(
-            "Sykepengehistorikk",
-            "AndreYtelser",
-            "Foreldrepenger",
-            "Verneplikt",
-            "Arbeidssøker",
-        )
+        private val muligeBehov =
+            listOf(
+                "Sykepengehistorikk",
+                "AndreYtelser",
+                "Foreldrepenger",
+                "Verneplikt",
+                "Arbeidssøker",
+            )
 
         @JvmStatic
-        private fun behovProvider() = Stream.of(
-            Arguments.of(UUID.randomUUID(), muligeBehov.shuffled()),
-            Arguments.of(
-                UUID.randomUUID(),
-                muligeBehov.shuffled().subList(2, 4),
-            ),
-        )
+        private fun behovProvider() =
+            Stream.of(
+                Arguments.of(UUID.randomUUID(), muligeBehov.shuffled()),
+                Arguments.of(
+                    UUID.randomUUID(),
+                    muligeBehov.shuffled().subList(2, 4),
+                ),
+            )
     }
 
     @Test
@@ -72,7 +75,10 @@ internal class BehovsakkumulatorTest {
 
     @ParameterizedTest
     @MethodSource("behovProvider")
-    fun `kombinere ett eller flere delsvar til et komplett svar`(behovId: UUID, genererteBehov: List<String>) {
+    fun `kombinere ett eller flere delsvar til et komplett svar`(
+        behovId: UUID,
+        genererteBehov: List<String>,
+    ) {
         behovFor(
             behovId = behovId.toString(),
             behov = genererteBehov.toTypedArray(),
@@ -99,11 +105,14 @@ internal class BehovsakkumulatorTest {
 
     @ParameterizedTest
     @MethodSource("behovProvider")
-    fun `sende ufullstending event ved mangel av løsninger på behov`(behovId: UUID, genererteBehov: List<String>) {
+    fun `sende ufullstending event ved mangel av løsninger på behov`(
+        behovId: UUID,
+        genererteBehov: List<String>,
+    ) {
         behovFor(
             behovId = behovId.toString(),
             behov = genererteBehov.toTypedArray(),
-            opprettet = LocalDateTime.now().minusHours(1), // Manipulate time to trigger 30 minute threshold
+            opprettet = LocalDateTime.now().minusHours(1),
         ).apply {
             rapid.sendTestMessage(this.toString())
         }.also {
@@ -128,9 +137,14 @@ internal class BehovsakkumulatorTest {
 }
 
 @Language("JSON")
-fun behovFor(behovId: String, vararg behov: String, opprettet: LocalDateTime = LocalDateTime.now()): JsonNode =
+fun behovFor(
+    behovId: String,
+    vararg behov: String,
+    opprettet: LocalDateTime = LocalDateTime.now(),
+): JsonNode =
     objectMapper.readTree(
-        """{
+        """
+        {
           "@id": "${UUID.randomUUID()}",
           "@behovId": "$behovId",
           "@opprettet": "$opprettet",
@@ -150,6 +164,7 @@ private fun løsningerI(løsning: JsonNode): List<String> =
         it.key
     }
 
-private val objectMapper: ObjectMapper = jacksonObjectMapper()
-    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    .registerModule(JavaTimeModule())
+private val objectMapper: ObjectMapper =
+    jacksonObjectMapper()
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .registerModule(JavaTimeModule())
