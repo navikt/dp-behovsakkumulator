@@ -19,8 +19,8 @@ spec:
     enabled: true
     path: /metrics
   replicas:
-    max: 6
-    min: 2
+    max: 1
+    min: 1
     cpuThresholdPercentage: 90
   resources:
     limits:
