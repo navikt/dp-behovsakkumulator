@@ -1,7 +1,7 @@
 import com.diffplug.spotless.LineEnding
 
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "1.9.23"
     application
     id("com.diffplug.spotless") version "6.25.0"
 }
