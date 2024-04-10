@@ -29,6 +29,9 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                 it.interestedIn("@behovId")
                 it.require("@opprettet", JsonNode::asLocalDateTime)
                 it.require("@behov") { behov -> require(behov.size() > 1) }
+
+                // Ignorerer behov fra dp-quiz fra behovsakkumulator
+                it.rejectValue("@event_name", "faktum_svar")
             }
         }.register(this)
     }
