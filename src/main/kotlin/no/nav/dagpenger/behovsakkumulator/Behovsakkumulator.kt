@@ -44,6 +44,13 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         withLoggingContext(
             "behovId" to behovId,
         ) {
+            if (packet["@behov"].size() == 1) {
+                packet["@final"] = true
+                context.publish(packet.toJson())
+                log.warn { "Behovsakkumulator mottok pakke med bare ett behov(${packet["@behov"].joinToString { it.asText() }}}), republiserer med @final=true direkte" }
+                return
+            }
+
             loggBehov(packet)
             val resultat =
                 behovUtenLøsning[behovId]?.also { it.second.kombinerLøsninger(packet) } ?: (context to packet)
