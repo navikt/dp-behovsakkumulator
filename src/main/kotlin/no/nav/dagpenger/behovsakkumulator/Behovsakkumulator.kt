@@ -49,7 +49,7 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                 context.publish(packet.toJson())
                 log.warn {
                     """Behovsakkumulator mottok pakke med bare ett 
-                    |behov(${packet["@behov"].joinToString { it.asText() }}}), republiserer med @final=true direkte
+                    |behov(${packet["@behov"].joinToString { it.asText() }}), republiserer med @final=true direkte
                     |
                     """.trimMargin()
                 }
