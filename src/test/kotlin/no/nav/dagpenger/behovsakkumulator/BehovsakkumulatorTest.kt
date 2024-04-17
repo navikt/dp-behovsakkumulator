@@ -55,7 +55,7 @@ internal class BehovsakkumulatorTest {
     }
 
     @Test
-    fun `pakker med bare ett behov skal ikke akkumuleres`() {
+    fun `pakker med bare ett behov skal også akkumuleres`() {
         val behov = listOf("Dagpenger")
         behovFor(
             behovId = UUID.randomUUID().toString(),
@@ -69,7 +69,7 @@ internal class BehovsakkumulatorTest {
         }
 
         with(rapid.inspektør) {
-            size.shouldBe(0)
+            size.shouldBe(1)
         }
     }
 
