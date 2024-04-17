@@ -47,7 +47,12 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
             if (packet["@behov"].size() == 1) {
                 packet["@final"] = true
                 context.publish(packet.toJson())
-                log.warn { "Behovsakkumulator mottok pakke med bare ett behov(${packet["@behov"].joinToString { it.asText() }}}), republiserer med @final=true direkte" }
+                log.warn {
+                    """Behovsakkumulator mottok pakke med bare ett 
+                    |behov(${packet["@behov"].joinToString { it.asText() }}}), republiserer med @final=true direkte
+                    |
+                    """.trimMargin()
+                }
                 return
             }
 
@@ -64,17 +69,15 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                 resultat.first.publish(resultat.second.toJson())
                 behovUtenLøsning.remove(behovId)
             } else {
-                behovUtenLøsning
-                    .filterValues { (_, packet) ->
-                        packet["@opprettet"].asLocalDateTime().isBefore(LocalDateTime.now().minusMinutes(30))
-                    }
-                    .forEach { (key, _) ->
-                        behovUtenLøsning.remove(key).also {
-                            if (it != null) {
-                                sendUfullstendigBehovEvent(it)
-                            }
+                behovUtenLøsning.filterValues { (_, packet) ->
+                    packet["@opprettet"].asLocalDateTime().isBefore(LocalDateTime.now().minusMinutes(30))
+                }.forEach { (key, _) ->
+                    behovUtenLøsning.remove(key).also {
+                        if (it != null) {
+                            sendUfullstendigBehovEvent(it)
                         }
                     }
+                }
                 behovUtenLøsning[behovId] = resultat
             }
         }
