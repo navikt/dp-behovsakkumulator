@@ -27,7 +27,7 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:3.0.5")
 
     implementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.6.2")
     testImplementation("io.mockk:mockk:1.13.10")
 }
