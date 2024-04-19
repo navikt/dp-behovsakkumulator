@@ -18,12 +18,14 @@ application {
 
 repositories {
     mavenCentral()
-    maven("https://jitpack.io")
+    maven {
+        url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+    }
     maven("https://packages.confluent.io/maven/")
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:2024020419561707073004.70bfb92c077c")
+    implementation("com.github.navikt:rapids-and-rivers:2024041714471713358051.71746f05c18e")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
 
     implementation(kotlin("test"))
