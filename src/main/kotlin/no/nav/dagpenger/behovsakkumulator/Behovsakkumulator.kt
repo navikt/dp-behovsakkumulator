@@ -11,7 +11,9 @@ import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
 import java.time.LocalDateTime
 
-class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListener {
+class Behovsakkumulator(
+    rapidsConnection: RapidsConnection,
+) : River.PacketListener {
     private companion object {
         private val log = KotlinLogging.logger {}
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -20,19 +22,20 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
     private val behovUtenLøsning = mutableMapOf<String, Pair<MessageContext, JsonMessage>>()
 
     init {
-        River(rapidsConnection).apply {
-            validate {
-                it.demandKey("@behov")
-                it.demandKey("@løsning")
-                it.rejectKey("@final")
-                it.requireKey("@id")
-                it.interestedIn("@behovId")
-                it.require("@opprettet", JsonNode::asLocalDateTime)
+        River(rapidsConnection)
+            .apply {
+                validate {
+                    it.demandKey("@behov")
+                    it.demandKey("@løsning")
+                    it.rejectKey("@final")
+                    it.requireKey("@id")
+                    it.interestedIn("@behovId")
+                    it.require("@opprettet", JsonNode::asLocalDateTime)
 
-                // Ignorerer behov fra dp-quiz fra behovsakkumulator
-                it.rejectValue("@event_name", "faktum_svar")
-            }
-        }.register(this)
+                    // Ignorerer behov fra dp-quiz fra behovsakkumulator
+                    it.rejectValue("@event_name", "faktum_svar")
+                }
+            }.register(this)
     }
 
     override fun onPacket(
@@ -44,18 +47,6 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         withLoggingContext(
             "behovId" to behovId,
         ) {
-            if (packet["@behov"].size() == 1) {
-                packet["@final"] = true
-                context.publish(packet.toJson())
-                log.warn {
-                    """Behovsakkumulator mottok pakke med bare ett 
-                    |behov(${packet["@behov"].joinToString { it.asText() }}), republiserer med @final=true direkte
-                    |
-                    """.trimMargin()
-                }
-                return
-            }
-
             loggBehov(packet)
             val resultat =
                 behovUtenLøsning[behovId]?.also { it.second.kombinerLøsninger(packet) } ?: (context to packet)
@@ -69,15 +60,16 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
                 resultat.first.publish(resultat.second.toJson())
                 behovUtenLøsning.remove(behovId)
             } else {
-                behovUtenLøsning.filterValues { (_, packet) ->
-                    packet["@opprettet"].asLocalDateTime().isBefore(LocalDateTime.now().minusMinutes(30))
-                }.forEach { (key, _) ->
-                    behovUtenLøsning.remove(key).also {
-                        if (it != null) {
-                            sendUfullstendigBehovEvent(it)
+                behovUtenLøsning
+                    .filterValues { (_, packet) ->
+                        packet["@opprettet"].asLocalDateTime().isBefore(LocalDateTime.now().minusMinutes(30))
+                    }.forEach { (key, _) ->
+                        behovUtenLøsning.remove(key).also {
+                            if (it != null) {
+                                sendUfullstendigBehovEvent(it)
+                            }
                         }
                     }
-                }
                 behovUtenLøsning[behovId] = resultat
             }
         }
@@ -94,17 +86,18 @@ class Behovsakkumulator(rapidsConnection: RapidsConnection) : River.PacketListen
         val behovId = behov["@behovId"].asText()
         context.publish(
             behovId,
-            JsonMessage.newMessage(
-                "behov_uten_fullstendig_løsning",
-                mapOf(
-                    "behov_id" to behovId,
-                    "behov_opprettet" to behov["@opprettet"].asLocalDateTime(),
-                    "forventet" to forventninger,
-                    "løsninger" to løsninger,
-                    "mangler" to mangler,
-                    "ufullstendig_behov" to behov.toJson(),
-                ),
-            ).toJson(),
+            JsonMessage
+                .newMessage(
+                    "behov_uten_fullstendig_løsning",
+                    mapOf(
+                        "behov_id" to behovId,
+                        "behov_opprettet" to behov["@opprettet"].asLocalDateTime(),
+                        "forventet" to forventninger,
+                        "løsninger" to løsninger,
+                        "mangler" to mangler,
+                        "ufullstendig_behov" to behov.toJson(),
+                    ),
+                ).toJson(),
         )
     }
 
