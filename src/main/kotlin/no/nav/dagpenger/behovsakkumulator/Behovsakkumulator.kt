@@ -26,16 +26,17 @@ class Behovsakkumulator(
     init {
         River(rapidsConnection)
             .apply {
+                precondition {
+                    it.requireKey("@løsning")
+                    it.forbid("@final")
+                    it.requireKey("@behov")
+                    // Ignorerer behov fra dp-quiz fra behovsakkumulator
+                    it.forbidValue("@event_name", "faktum_svar")
+                }
                 validate {
-                    it.demandKey("@behov")
-                    it.demandKey("@løsning")
-                    it.rejectKey("@final")
                     it.requireKey("@id")
                     it.interestedIn("@behovId")
                     it.require("@opprettet", JsonNode::asLocalDateTime)
-
-                    // Ignorerer behov fra dp-quiz fra behovsakkumulator
-                    it.rejectValue("@event_name", "faktum_svar")
                 }
             }.register(this)
     }
