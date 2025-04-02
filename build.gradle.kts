@@ -31,9 +31,6 @@ dependencies {
 }
 
 tasks {
-    build {
-        dependsOn("spotlessApply")
-    }
     jar {
         manifest {
             attributes["Main-Class"] = application.mainClass
