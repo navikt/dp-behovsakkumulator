@@ -1,9 +1,6 @@
-import com.diffplug.spotless.LineEnding
-
 plugins {
-    kotlin("jvm") version "2.1.20"
+    id("common")
     application
-    id("com.diffplug.spotless") version "6.25.0"
 }
 
 kotlin {
@@ -61,16 +58,4 @@ tasks {
             showStandardStreams = true
         }
     }
-}
-
-spotless {
-    kotlin {
-        ktlint()
-    }
-    kotlinGradle {
-        target("*.gradle.kts")
-        ktlint()
-    }
-    // https://github.com/diffplug/spotless/issues/1644
-    lineEndings = LineEnding.PLATFORM_NATIVE // or any other except GIT_ATTRIBUTES
 }
