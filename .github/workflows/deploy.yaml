@@ -1,20 +1,18 @@
-name: Deploy
+name: Build and deploy
 
 on:
   push:
-    branches:
-      - main
-
-permissions:
-  contents: "read"
-  id-token: "write"
+    branches-ignore:
+      - 'dependabot/**'
 
 jobs:
   build:
+    name: Build and publish Docker image
     runs-on: ubuntu-latest
-    permissions:
-      contents: "write"
+    permissions: # Sjekk https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+      contents: "write" # For å submitte dependency graph
       checks: "write"
+      pull-requests: "write"
       id-token: "write"
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +20,15 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-
-      - uses: gradle/gradle-build-action@v3.5.0
-        env: # Eksluder test dependencies
+      - uses: gradle/actions/wrapper-validation@v4
+      - uses: gradle/actions/setup-gradle@v4
+        env:
+          # Eksluder test dependencies
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath
         with:
           dependency-graph: generate-and-submit
-          arguments: --configuration-cache build
+          cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
+      - run: ./gradlew --configuration-cache build
 
       - name: Publish results (unit test)
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -42,35 +42,59 @@ jobs:
         with:
           team: teamdagpenger
           tag: ${{ github.sha }}
+          dockerfile: Dockerfile # optional, default Dockerfile
+          docker_context: . # optional, default .
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
-
+          salsa: false
     outputs:
       image: ${{ steps.docker-build-push.outputs.image }}
+      digest: ${{ steps.docker-build-push.outputs.digest }}
+
+  salsa:
+    name: Generate SBOM, attest and sign image
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: "write"
+    steps:
+      - uses: navikt/dagpenger/actions/attest-sign@master
+        with:
+          digest: ${{ needs.build.outputs.digest }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          team: teamdagpenger
 
   deploy-dev:
+    name: Deploy to dev
     needs: [ build ]
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: dev-gcp
     steps:
       - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
         env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
-          RESOURCE: .nais/nais.yaml
+          RESOURCE: .nais/nais.yaml,.nais/unleash.yaml
           VAR: image=${{ needs.build.outputs.image }}
           VARS: .nais/vars-dev.yaml
           PRINT_PAYLOAD: true
 
   deploy-prod:
+    name: Deploy to Production
     needs: [ build ]
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: prod-gcp
     steps:
       - uses: actions/checkout@v4
       - uses: nais/deploy/actions/deploy@v2
         env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: prod-gcp
           RESOURCE: .nais/nais.yaml
-          VAR: image=${{ needs.build.outputs.image }}
           VARS: .nais/vars-prod.yaml
+          VAR: image=${{ needs.build.outputs.image }}
           PRINT_PAYLOAD: true
