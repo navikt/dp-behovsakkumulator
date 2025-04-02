@@ -9,9 +9,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
-import java.time.LocalDateTime
 import mu.KotlinLogging
 import mu.withLoggingContext
+import java.time.LocalDateTime
 
 class Behovsakkumulator(
     rapidsConnection: RapidsConnection,
@@ -45,7 +45,7 @@ class Behovsakkumulator(
         packet: JsonMessage,
         context: MessageContext,
         metadata: MessageMetadata,
-        meterRegistry: MeterRegistry
+        meterRegistry: MeterRegistry,
     ) {
         val behovId = packet["@behovId"].asText()
 
