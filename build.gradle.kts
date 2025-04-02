@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:2024112510241732526640.8542991368ca")
+    implementation("com.github.navikt:rapids-and-rivers:2025033013171743333452.914c05d38d42")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
 
     implementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:2025.03.30-13.02-f7cb11ef")
@@ -31,9 +31,6 @@ dependencies {
 }
 
 tasks {
-    build {
-        dependsOn("spotlessApply")
-    }
     jar {
         manifest {
             attributes["Main-Class"] = application.mainClass
