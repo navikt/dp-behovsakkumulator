@@ -25,7 +25,7 @@ dependencies {
 
     implementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:2025.04.04-09.18-7cc3badf")
     implementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.12.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.12.2")
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.1")
     testImplementation("io.mockk:mockk:1.14.0")
 }
