@@ -6,7 +6,7 @@ metadata:
   labels:
     team: teamdagpenger
 spec:
-  image: {{ image }}
+  image: "{{ image }}"
   port: 8080
   liveness:
     path: /isalive
@@ -31,7 +31,7 @@ spec:
   secureLogs:
     enabled: true
   kafka:
-    pool: {{ kafka.pool }}
+    pool: "{{ kafka.pool }}"
   env:
     - name: KAFKA_CONSUMER_GROUP_ID
       value: dp-behovsakkumulator-v1
