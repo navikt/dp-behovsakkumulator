@@ -37,3 +37,11 @@ spec:
       value: dp-behovsakkumulator-v1
     - name: KAFKA_RAPID_TOPIC
       value: teamdagpenger.rapid.v1
+  observability:
+    logging:
+      destinations:
+        - id: loki
+        - id: elastic
+    autoInstrumentation:
+      enabled: true
+      runtime: java
