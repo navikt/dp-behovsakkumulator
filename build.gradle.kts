@@ -27,7 +27,7 @@ dependencies {
     implementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.3")
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.1")
-    testImplementation("io.mockk:mockk:1.14.4")
+    testImplementation("io.mockk:mockk:1.14.5")
 }
 
 tasks {
