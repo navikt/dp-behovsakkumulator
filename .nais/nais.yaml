@@ -8,12 +8,20 @@ metadata:
 spec:
   image: "{{ image }}"
   port: 8080
+  startup:
+    path: /isalive
+    initialDelay: 10
+    failureThreshold: 6
+    periodSeconds: 5
+    timeout: 1
   liveness:
     path: /isalive
+    failureThreshold: 6
+    periodSeconds: 10
   readiness:
     path: /isready
-  startup:
-    path: /isready
+    failureThreshold: 3
+    periodSeconds: 10
     initialDelay: 5
   prometheus:
     enabled: true
