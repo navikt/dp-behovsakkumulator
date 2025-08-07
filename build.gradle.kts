@@ -23,7 +23,7 @@ dependencies {
     implementation("com.github.navikt:rapids-and-rivers:2025061811051750237542.df739400e55e")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
 
-    implementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:2025.06.20-13.05-40af2647")
+    implementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:2025.08.07-07.29-1fe0cf40")
     implementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.4")
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.1")
