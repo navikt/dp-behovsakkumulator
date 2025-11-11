@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 24
       - uses: gradle/actions/wrapper-validation@v5
       - uses: gradle/actions/setup-gradle@v5
         env:
@@ -28,7 +28,7 @@ jobs:
         with:
           dependency-graph: generate-and-submit
           cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
-      - run: ./gradlew --configuration-cache build
+      - run: ./gradlew --configuration-cache build installDist
 
       - name: Publish results (unit test)
         uses: EnricoMi/publish-unit-test-result-action@v2

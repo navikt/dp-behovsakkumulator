@@ -3,10 +3,6 @@ plugins {
     application
 }
 
-kotlin {
-    jvmToolchain(21)
-}
-
 application {
     mainClass.set("no.nav.dagpenger.behovsakkumulator.AppKt")
     group = "no.nav.dagpenger"
@@ -30,29 +26,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.14.5")
 }
 
-tasks {
-    jar {
-        manifest {
-            attributes["Main-Class"] = application.mainClass
-        }
-
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        archiveFileName.set("${project.name}-fat.jar")
-        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-    }
-    test {
-        useJUnitPlatform()
-        testLogging {
-            showExceptions = true
-            showStackTraces = true
-            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-            events =
-                setOf(
-                    org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED,
-                    org.gradle.api.tasks.testing.logging.TestLogEvent.SKIPPED,
-                    org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
-                )
-            showStandardStreams = true
-        }
-    }
+application {
+    applicationName = "dp-behovsakkumulator"
+    mainClass.set("no.nav.dagpenger.behovsakkumulator.AppKt")
 }
