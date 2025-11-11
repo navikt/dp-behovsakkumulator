@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.navikt:rapids-and-rivers:2025061811051750237542.df739400e55e")
+    implementation("com.github.navikt:rapids-and-rivers:2025110410541762250064.d7e58c3fad81")
     implementation("io.github.microutils:kotlin-logging:3.0.5")
 
     implementation("com.github.navikt.tbd-libs:rapids-and-rivers-test:2025.06.20-13.05-40af2647")
