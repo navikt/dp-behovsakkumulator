@@ -38,6 +38,11 @@ spec:
       memory: 128Mi
   secureLogs:
     enabled: true
+  accessPolicy:
+    outbound:
+      rules:
+        - application: logging
+          namespace: nais-system
   kafka:
     pool: "{{ kafka.pool }}"
   env:
