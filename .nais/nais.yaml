@@ -36,8 +36,6 @@ spec:
     requests:
       cpu: 20m
       memory: 128Mi
-  secureLogs:
-    enabled: true
   accessPolicy:
     outbound:
       rules:
