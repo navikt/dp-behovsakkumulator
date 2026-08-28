@@ -1,7 +1,5 @@
 package no.nav.dagpenger.behovsakkumulator
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
@@ -11,6 +9,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ObjectNode
 import java.time.LocalDateTime
 
 class Behovsakkumulator(
@@ -108,14 +108,14 @@ class Behovsakkumulator(
 
     private fun JsonMessage.erKomplett(): Boolean = this.forventninger().all { it in this.løsninger() }
 
-    private fun JsonMessage.forventninger(): Set<String> = this["@behov"].map(JsonNode::asText).toSet()
+    private fun JsonMessage.forventninger(): Set<String> = this["@behov"].toList().map(JsonNode::asString).toSet()
 
-    private fun JsonMessage.løsninger(): Set<String> = this["@løsning"].fieldNames().asSequence().toSet()
+    private fun JsonMessage.løsninger(): Set<String> = this["@løsning"].propertyNames().toSet()
 
     private fun JsonMessage.kombinerLøsninger(packet: JsonMessage) {
         val løsning = this["@løsning"] as ObjectNode
-        packet["@løsning"].fields().forEach { (behovtype, delløsning) ->
-            løsning.set<JsonNode>(behovtype, delløsning)
+        packet["@løsning"].properties().forEach { (behovtype, delløsning) ->
+            løsning.set(behovtype, delløsning)
         }
 
         loggKombinering(this)
@@ -124,7 +124,7 @@ class Behovsakkumulator(
     private fun loggBehov(packet: JsonMessage) {
         listOf(log, sikkerlogg).forEach { logger ->
             logger.info {
-                val løsninger = packet["@løsning"].fieldNames().asSequence().joinToString(", ")
+                val løsninger = packet["@løsning"].propertyNames().joinToString(", ")
                 "Mottok løsning for $løsninger"
             }
         }
@@ -133,8 +133,8 @@ class Behovsakkumulator(
     private fun loggKombinering(packet: JsonMessage) {
         listOf(log, sikkerlogg).forEach { logger ->
             logger.info {
-                val løsninger = packet["@løsning"].fieldNames().asSequence().toList()
-                val behov = packet["@behov"].map(JsonNode::asText)
+                val løsninger = packet["@løsning"].propertyNames().toList()
+                val behov = packet["@behov"].toList().map(JsonNode::asString)
                 val mangler = behov.minus(løsninger)
                 val melding = "Har løsninger for [${løsninger.joinToString(", \n\t", "\n\t", "\n")}]. "
 

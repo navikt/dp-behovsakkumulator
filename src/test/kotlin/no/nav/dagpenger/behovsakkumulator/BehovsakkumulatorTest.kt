@@ -1,11 +1,5 @@
 package no.nav.dagpenger.behovsakkumulator
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -18,6 +12,10 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.node.ObjectNode
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDateTime
 import java.util.UUID
 import java.util.stream.Stream
@@ -92,12 +90,12 @@ internal class BehovsakkumulatorTest {
 
         with(rapid.inspektør) {
             size.shouldBe(1)
-            field(0, "@behovId").asText() shouldBe behovId.toString()
+            field(0, "@behovId").asString() shouldBe behovId.toString()
 
             field(0, "@final").asBoolean() shouldBe true
             løsningerI(field(0, "@løsning")).containsAll(genererteBehov) shouldBe true
 
-            assertDoesNotThrow { LocalDateTime.parse(field(0, "@besvart").asText()) }
+            assertDoesNotThrow { LocalDateTime.parse(field(0, "@besvart").asString()) }
         }
 
         rapid.reset()
@@ -123,12 +121,12 @@ internal class BehovsakkumulatorTest {
 
         with(rapid.inspektør) {
             if (size == 1 && message(0)["@event_name"] != null) {
-                field(0, "@event_name").asText() shouldBe "behov_uten_fullstendig_løsning"
+                field(0, "@event_name").asString() shouldBe "behov_uten_fullstendig_løsning"
                 field(0, "@opprettet").asLocalDateTime() shouldNotBe null
                 field(0, "forventet").asIterable().toList().shouldNotBeEmpty()
                 field(0, "mangler").asIterable().toList().shouldNotBeEmpty()
-                field(0, "behov_opprettet").asText() shouldNotBe null
-                field(0, "ufullstendig_behov").asText() shouldNotBe null
+                field(0, "behov_opprettet").asString() shouldNotBe null
+                field(0, "ufullstendig_behov").asString() shouldNotBe null
             }
         }
 
@@ -156,15 +154,13 @@ fun behovFor(
     )
 
 private fun JsonNode.medLøsning(løsning: String) =
-    (this.deepCopy() as ObjectNode).set<ObjectNode>("@løsning", objectMapper.readTree(løsning))
+    (this.deepCopy() as ObjectNode).set("@løsning", objectMapper.readTree(løsning))
         .toString()
 
 private fun løsningerI(løsning: JsonNode): List<String> =
-    løsning.fields().asSequence().toList().map {
+    løsning.properties().toList().map {
         it.key
     }
 
 private val objectMapper: ObjectMapper =
     jacksonObjectMapper()
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .registerModule(JavaTimeModule())
