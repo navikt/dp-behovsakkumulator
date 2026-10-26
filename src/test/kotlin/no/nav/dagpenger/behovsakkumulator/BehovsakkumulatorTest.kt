@@ -154,7 +154,8 @@ fun behovFor(
     )
 
 private fun JsonNode.medLøsning(løsning: String) =
-    (this.deepCopy() as ObjectNode).set("@løsning", objectMapper.readTree(løsning))
+    (this.deepCopy() as ObjectNode)
+        .set("@løsning", objectMapper.readTree(løsning))
         .toString()
 
 private fun løsningerI(løsning: JsonNode): List<String> =

@@ -47,7 +47,7 @@ class Behovsakkumulator(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behovId = packet["@behovId"].asText()
+        val behovId = packet["@behovId"].asString()
 
         withLoggingContext(
             "behovId" to behovId,
@@ -88,7 +88,7 @@ class Behovsakkumulator(
 
         loggUfullstendingBehov(mangler)
 
-        val behovId = behov["@behovId"].asText()
+        val behovId = behov["@behovId"].asString()
         context.publish(
             behovId,
             JsonMessage
